@@ -1,0 +1,5 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {crc16,pixPayload,parseMoney} from '../src/pix.js';
+test('CRC16-CCITT-FALSE vetor conhecido',()=>assert.equal(crc16('123456789'),'29B1'));
+test('CRC do exemplo oficial BCB sem valor',()=>assert.equal(crc16('00020126580014br.gov.bcb.pix0136123e4567-e12b-12d1-a456-4266554400005204000053039865802BR5913Fulano de Tal6008BRASILIA62070503***6304'),'1D3D'));
+test('Pix TLV, moeda e valor',()=>{const p=pixPayload({key:'123e4567-e12b-12d1-a456-426655440000',name:'José',city:'São Paulo',cents:2501});assert.ok(p.includes('540525.01'));assert.ok(p.includes('5904JOSE'));assert.ok(p.includes('6009SAO PAULO'));assert.equal(p.slice(-4),crc16(p.slice(0,-4)));let i=0;while(i<p.length){const n=Number(p.slice(i+2,i+4));assert.ok(Number.isInteger(n));i+=4+n}assert.equal(i,p.length)});
+test('moeda e limites',()=>{assert.equal(parseMoney('25,01'),2501);assert.equal(parseMoney('0.05'),5);assert.throws(()=>parseMoney('2e3'));assert.throws(()=>pixPayload({key:'abc',name:'A',city:'B',cents:-1}));assert.throws(()=>pixPayload({key:'abc',name:'A',city:'B',cents:1,txid:'x-y'}))});
